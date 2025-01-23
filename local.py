@@ -42,6 +42,7 @@ def handle_mark(text, marks):
     return ''.join(result)
 
 def response2md(json_dict):
+    # 提取文章信息
     author = json_dict['author']['fullname']
     time = json_dict['content_end_info']['create_time_text'][:10]
     question = json_dict["header"]["text"]
@@ -65,6 +66,7 @@ def response2md(json_dict):
             for i in range(len(items)):
                 markdown += f"{i+1}. "
                 markdown += handle_mark(items[i]["text"], items[i]["marks"])
+                
         elif segment["type"] == "heading":
             markdown += f"{"#" * segment["heading"]["level"]} {segment["heading"]["text"]}\n\n" 
 
@@ -82,8 +84,10 @@ def response2md(json_dict):
             if not os.path.exists(img_dir_path):
                 os.makedirs(img_dir_path)
             download_image(url, img_path)
-
             markdown += f"![]({img_name})\n\n"
+
+        elif segment["type"] == "code_block":
+            markdown += f"```{segment["code_block"]["language"]}\n{segment["code_block"]["content"]}\n```\n\n"
     
     if image_index > 0: 
         #若有图片则md保存到相关子目录
@@ -94,11 +98,16 @@ def response2md(json_dict):
         md.write(markdown)
 
 def response(flow: mitmproxy.http.HTTPFlow):
-    if "api.zhihu.com" in flow.request.host and ("/answers/" in flow.request.path or "/articles/" in flow.request.path or "/pins/" in flow.request.path):
+    no_cond = "page-info.zhihu.com" in flow.request.host
+    # 域名api.zhihu.com有时候会变成一串ip，不作为参考
+    cond1 = "api.zhihu.com" in flow.request.host and ("/answers/" in flow.request.path or "/articles/" in flow.request.path or "/pins/" in flow.request.path)
+    cond2 = "/answers/v2" in flow.request.path or "/articles/v2" in flow.request.path or "/pins/v2" in flow.request.path
+    if not no_cond and cond2:
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
         
         response_content = flow.response.content
         response_text = response_content.decode('utf-8' )
         data = json.loads(response_text)
+
         response2md(data)
