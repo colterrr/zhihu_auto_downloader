@@ -3,6 +3,9 @@ import os
 import requests
 import json
 import re
+from typing import Literal
+
+text_type_ = Literal["answer", "article", "pin"]
 
 download_dir = "download"
 
@@ -38,15 +41,20 @@ def handle_mark(text, marks):
         elif mark["type"] == "link":
             result.append(f"[{text[start:end]}]({mark["link"]["href"]})")
             last_end = end
+        else :
+            result.append(text[start:end])
+            last_end = end
     result.append(text[last_end:] + '\n\n') #加入无mark的末尾部分
     return ''.join(result)
 
-def response2md(json_dict):
+def response2md(json_dict, text_type: text_type_):
     # 提取文章信息
     author = json_dict['author']['fullname']
     time = json_dict['content_end_info']['create_time_text'][:10]
     question = json_dict["header"]["text"]
-    markdown = f"# {question}\n\n**Author**:{author}\n\n"
+    author_url = json_dict["author"]["avatar"]["avatar_image"]["jump_url"]
+    article_url = json_dict["header"]["action_url"]
+    markdown = f"# {question}\n\n**Author**: [{author}]({author_url})\n\n**Link**: [{article_url}]({article_url})\n\n"
     markdown_name = time + '_' + question + '_' + author
     # 替换非法字符为空字符串
     markdown_name = re.sub(r'[\/:*?"<>|]', '', markdown_name)
@@ -70,6 +78,9 @@ def response2md(json_dict):
         elif segment["type"] == "heading":
             markdown += f"{"#" * segment["heading"]["level"]} {segment["heading"]["text"]}\n\n" 
 
+        elif segment["type"] == "hr":
+            markdown += "---\n\n"
+
         elif segment["type"] == "image":
             image_index += 1            
             url = segment["image"]["urls"][0]
@@ -89,6 +100,24 @@ def response2md(json_dict):
         elif segment["type"] == "code_block":
             markdown += f"```{segment["code_block"]["language"]}\n{segment["code_block"]["content"]}\n```\n\n"
     
+    # 知乎想法的图片特殊处理
+    if text_type == "pin":
+        for image in json_dict["image_list"]["images"]:
+            image_index += 1            
+            url = image["original_url"]
+            #查找图片格式后缀并添加至文件名
+            for ext in  extensions:
+                if url.find(ext) != -1:
+                    img_name = f"img{image_index}{ext}"
+                    break
+
+            img_dir_path = f"{download_dir}/{markdown_name}"
+            img_path = img_dir_path + '/' + img_name
+            if not os.path.exists(img_dir_path):
+                os.makedirs(img_dir_path)
+            download_image(url, img_path)
+            markdown += f"![]({img_name})\n\n"
+
     if image_index > 0: 
         #若有图片则md保存到相关子目录
         markdown_savepath = f"{download_dir}/{markdown_name}"   
@@ -110,4 +139,9 @@ def response(flow: mitmproxy.http.HTTPFlow):
         response_text = response_content.decode('utf-8' )
         data = json.loads(response_text)
 
-        response2md(data)
+        if "/pins/v2" in flow.request.path:
+            response2md(data, "pin")
+        elif "/articles/v2" in flow.request.path:
+            response2md(data, "article")
+        elif "/answers/v2" in flow.request.path:
+            response2md(data, "answer")            
