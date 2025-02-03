@@ -81,6 +81,20 @@ def response2md(json_dict, text_type: text_type_):
         elif segment["type"] == "hr":
             markdown += "---\n\n"
 
+        elif segment["type"] == "table":
+            row_n = segment["table"]["row_count"]
+            col_m = segment["table"]["column_count"]
+            for i in range(0, row_n):
+                for j in range(0, col_m):
+                    if j == 0 and segment["table"]["head_column"]:
+                        markdown += f"|**{segment["table"]["cells"][i*col_m + j]}**"
+                    else :
+                        markdown += f"|{segment["table"]["cells"][i*col_m + j]}"
+                markdown += "|\n"
+                if i == 0:
+                    markdown += f"{'|:---' * col_m}|\n"
+            markdown += '\n'
+
         elif segment["type"] == "image":
             image_index += 1            
             url = segment["image"]["urls"][0]
@@ -101,7 +115,7 @@ def response2md(json_dict, text_type: text_type_):
             markdown += f"```{segment["code_block"]["language"]}\n{segment["code_block"]["content"]}\n```\n\n"
     
     # 知乎想法的图片特殊处理
-    if text_type == "pin":
+    if text_type == "pin" and json_dict["image_list"]:
         for image in json_dict["image_list"]["images"]:
             image_index += 1            
             url = image["original_url"]
