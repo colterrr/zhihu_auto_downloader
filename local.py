@@ -69,6 +69,10 @@ def response2md(json_dict, text_type: text_type_):
         if segment["type"] == "paragraph":
             markdown += handle_mark(segment["paragraph"]["text"], segment["paragraph"]["marks"])
 
+        elif segment["type"] == "blockquote":
+            markdown += ">"
+            markdown += handle_mark(segment["blockquote"]["text"], segment["blockquote"]["marks"])
+
         elif segment["type"] == "list_node":
             items = segment["list_node"]["items"]
             for i in range(len(items)):
@@ -94,6 +98,10 @@ def response2md(json_dict, text_type: text_type_):
                 if i == 0:
                     markdown += f"{'|:---' * col_m}|\n"
             markdown += '\n'
+
+        elif segment["type"] == "card":
+            if segment["card"]["card_type"] == "link-card":
+                markdown += f"[{segment["card"]["title"]}]({segment["card"]["url"]})\n\n"
 
         elif segment["type"] == "image":
             image_index += 1            
