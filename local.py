@@ -26,25 +26,32 @@ def handle_mark(text, marks):
     """
     给文本和mark列表,返回处理后的markdown文本字符串
     """
-    result = []
-    last_end = 0
+    mark_insert = []
     for mark in marks:
         start = mark["start_index"]
-        end = mark["end_index"]
-        result.append(text[last_end:start]) #加入当前mark前的文本内容
+        end = mark["end_index"]        
         if mark["type"] == "bold":
-            result.append(f"**{text[start:end]}**")
-            last_end = end
+            mark_insert.append(("insert", start, "**"))
+            mark_insert.append(("insert", end, "**"))
         elif mark["type"] == "formula":
-            result.append('$' + mark["formula"]["content"] + '$')
-            last_end = end
+            formula_str = re.sub(r' ', '', mark["formula"]["content"])
+            mark_insert.append(("replace", start, end, '$' + formula_str + '$'))
         elif mark["type"] == "link":
-            result.append(f"[{text[start:end]}]({mark["link"]["href"]})")
-            last_end = end
-        else :
-            result.append(text[start:end])
-            last_end = end
-    result.append(text[last_end:] + '\n\n') #加入无mark的末尾部分
+            mark_insert.append(("insert", start, "["))
+            mark_insert.append(("insert", end, f"]({mark["link"]["href"]})"))
+    mark_insert.sort(key=lambda x: x[1])
+
+    result = []
+    last_end = 0
+    for mark in mark_insert:
+        if mark[0] == "insert":
+            result.append(text[last_end:mark[1]] + mark[2])
+            if last_end < mark[1]:
+                last_end = mark[1]
+        elif mark[0] == "replace":
+            result.append(text[last_end:mark[1]] + mark[3])
+            last_end = mark[2]
+    result.append(text[last_end:] + '\n\n')
     return ''.join(result)
 
 def response2md(json_dict, text_type: text_type_):
@@ -117,7 +124,11 @@ def response2md(json_dict, text_type: text_type_):
             if not os.path.exists(img_dir_path):
                 os.makedirs(img_dir_path)
             download_image(url, img_path)
-            markdown += f"![]({img_name})\n\n"
+            if segment["image"]["description"]:
+                description = f"<center>{segment["image"]["description"]}</center>\n"
+            else :
+                description = ""            
+            markdown += f"![]({img_name}){description}\n\n"
 
         elif segment["type"] == "code_block":
             markdown += f"```{segment["code_block"]["language"]}\n{segment["code_block"]["content"]}\n```\n\n"
