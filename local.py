@@ -24,7 +24,7 @@ def download_image(url, save_path):
 
 def handle_mark(text, marks):
     """
-    给文本和mark列表,返回处理后的markdown文本字符串
+    给文本和mark列表,返回处理后的markdown文本字符串 (结尾含两个换行符)
     """
     mark_insert = []
     for mark in marks:
@@ -34,7 +34,13 @@ def handle_mark(text, marks):
             mark_insert.append(("insert", start, "**"))
             mark_insert.append(("insert", end, "**"))
         elif mark["type"] == "formula":
-            formula_str = re.sub(r' ', '', mark["formula"]["content"])
+            #formula_str = re.sub(r' ', '', mark["formula"]["content"])
+            # 去除可能的书写不规范的formula首尾位置的空格
+            formula_str = mark["formula"]["content"]
+            if formula_str[0] == ' ':
+                formula_str = formula_str[1:]
+            if formula_str[-1] == ' ':
+                formula_str = formula_str[:-1]
             mark_insert.append(("replace", start, end, '$' + formula_str + '$'))
         elif mark["type"] == "link":
             mark_insert.append(("insert", start, "["))
@@ -87,7 +93,8 @@ def response2md(json_dict, text_type: text_type_):
                 markdown += handle_mark(items[i]["text"], items[i]["marks"])
                 
         elif segment["type"] == "heading":
-            markdown += f"{"#" * segment["heading"]["level"]} {segment["heading"]["text"]}\n\n" 
+            markdown += f"{"#" * segment["heading"]["level"]} " 
+            markdown += handle_mark(segment["heading"]["text"], segment["heading"]["marks"])
 
         elif segment["type"] == "hr":
             markdown += "---\n\n"
