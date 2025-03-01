@@ -64,11 +64,17 @@ def response2md(json_dict, text_type: text_type_):
     # 提取文章信息
     author = json_dict['author']['fullname']
     time = json_dict['content_end_info']['create_time_text'][:10]
-    question = json_dict["header"]["text"]
-    author_url = json_dict["author"]["avatar"]["avatar_image"]["jump_url"]
-    article_url = json_dict["header"]["action_url"]
-    markdown = f"# {question}\n\n**Author**: [{author}]({author_url})\n\n**Link**: [{article_url}]({article_url})\n\n"
-    markdown_name = time + '_' + question + '_' + author
+    author_url = json_dict["author"]["avatar"]["avatar_image"]["jump_url"]  
+    if text_type == "pin":
+        length = min(20, len(json_dict["excerpt"]))
+        excerpt = json_dict["excerpt"][0:length] + '(...)'
+        markdown = f"# {excerpt}\n\n**Author**: [{author}]({author_url})\n\n"
+        markdown_name = time + '_' + author + '的想法_' + excerpt
+    else :
+        question = json_dict["header"]["text"]
+        article_url = json_dict["header"]["action_url"]
+        markdown = f"# {question}\n\n**Author**: [{author}]({author_url})\n\n**Link**: [{article_url}]({article_url})\n\n"
+        markdown_name = time + '_' + question + '_' + author
     # 替换非法字符为空字符串
     markdown_name = re.sub(r'[\/:*?"<>|]', '', markdown_name)
 
