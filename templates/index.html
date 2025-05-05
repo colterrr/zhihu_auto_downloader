@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>文件状态概览</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 40px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    h1 {
+      color: #444;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .scroll-box {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: white;
+      border-radius: 5px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 6px 4px;
+      border-bottom: 1px dashed #ddd;
+    }
+
+    .type-file {
+      color: green;
+    }
+
+    .type-dir {
+      color: blue;
+    }
+
+    .new {
+      font-weight: bold;
+      color: darkred;
+    }
+
+    .icon {
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h1>📁 当前 /download 目录内容</h1>
+    <div class="scroll-box">
+      <ul id="entry-list">加载中...</ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h1>🆕 新增文件/目录（服务启动以来）</h1>
+    <ul id="new-list">加载中...</ul>
+  </div>
+
+  <script>
+    async function loadStatus() {
+      const res = await fetch("/download_status");
+      const data = await res.json();
+
+      const entryList = document.getElementById("entry-list");
+      const newList = document.getElementById("new-list");
+
+      entryList.innerHTML = "";
+      newList.innerHTML = "";
+
+      if (data.entries?.length > 0) {
+        data.entries.forEach(item => {
+          const li = document.createElement("li");
+          const icon = item.type === "dir" ? "📂" : "📄";
+          li.innerHTML = `<span class="icon">${icon}</span><span class="type-${item.type}">${item.name}</span>`;
+          entryList.appendChild(li);
+        });
+      } else {
+        entryList.innerHTML = "<li>（空）</li>";
+      }
+
+      if (data.files_since_startup?.length > 0) {
+        data.files_since_startup.forEach(name => {
+          const li = document.createElement("li");
+          li.innerHTML = `🆕 <span class="new">${name}</span>`;
+          newList.appendChild(li);
+        });
+      } else {
+        newList.innerHTML = "<li>暂无新增文件</li>";
+      }
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>
