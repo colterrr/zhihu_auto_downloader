@@ -1,2 +1,1 @@
-start mitmproxy -s local.py --listen-port 8080 --ssl-insecure 
-python check.py
+mitmproxy -s local.py --listen-port 8080 --ssl-insecure
