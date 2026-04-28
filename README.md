@@ -1,6 +1,6 @@
 # 知乎文章自动下载器
 
-<video src="readme_stuff/demo.mp4" autoplay loop muted></video>
+![demo](readme_stuff/demo.gif)
 
 ### 想法来源
 
