@@ -1,5 +1,7 @@
 # 知乎文章自动下载器
 
+<video src="readme_stuff/demo.mp4" autoplay loop muted></video>
+
 ### 想法来源
 
 之前在用这个[知乎文章下载器项目（by chenluda）](https://github.com/chenluda/zhihu-download)，但是我想下载的文章太多了懒得一个一个复制url而且还要从手机复制到电脑里，就自己写了个针对手机的自动下载的版本
@@ -28,16 +30,16 @@
 
 1. 在safari游览器中访问[http://mitm.it/](http://mitm.it/)进行证书安装
 
-   ![img](readme_img/a3.png)
+   ![img](readme_stuff/a3.png)
 2. 设置证书的信任：设置 -> 通用-> VPN与设备管理 ->  mitmproxy，点击进行安装
 
-   ![img](readme_img/a4.png)
+   ![img](readme_stuff/a4.png)
    安装成功
 
-   ![img](readme_img/a5.png)
+   ![img](readme_stuff/a5.png)
 3. 证书的信任开关在：通用 -> 关于本机 -> 下拉到 证书信任设置 -> 找到mitmproxy
 
-   ![img](readme_img/a6.png)
+   ![img](readme_stuff/a6.png)
 4. 完成这些后mitmproxy工具就可以获取你的手机http请求进行处理了
 
 ### 附：手机网络http代理配置流程（ios）(不过建议使用代理软件, 方便且稳定)
@@ -46,6 +48,6 @@
 2. 获取计算机ip（终端输入ipconfig）
 3. 打开iphone设置 - wifi - i按钮
 
-   ![img](readme_img/a1.png)
+   ![img](readme_stuff/a1.png)
 4. 找到里面http代理一栏，选择“手动”(使用完记得改回关闭)，并输入第2步获得的电脑ip和脚本端口号（脚本里设为8080）到“服务器”和“端口”，记得点“存储”保存
-   ![img](readme_img/a2.png)
+   ![img](readme_stuff/a2.png)
