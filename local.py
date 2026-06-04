@@ -9,6 +9,11 @@ text_type_ = Literal["answer", "article", "pin"]
 
 download_dir = "download"
 
+from main import prefix
+
+def user_print(msg):
+    print(prefix + ' ' + msg)
+
 def download_image(url, save_path):
     """
     从指定url下载图片并保存到本地
@@ -82,7 +87,7 @@ def response2md(json_dict, text_type: text_type_):
         if os.path.exists(f"{download_dir}/{markdown_name}.md") or os.path.exists(f"{download_dir}/{markdown_name}"):
             # 存在相同文件，不重复保存
             return
-        
+
         image_index = 0 #图片索引，用来记录文章里含有几张图片
         extensions = ['.jpg', '.png', '.gif'] #图片可能的格式后缀
         for segment in json_dict["structured_content"]["segments"]:
@@ -146,7 +151,7 @@ def response2md(json_dict, text_type: text_type_):
 
             elif segment["type"] == "code_block":
                 markdown += f"```{segment["code_block"]["language"]}\n{segment["code_block"]["content"]}\n```\n\n"
-        
+
         # 知乎想法的图片特殊处理
         if text_type == "pin" and json_dict["image_list"]:
             for image in json_dict["image_list"]["images"]:
@@ -170,12 +175,13 @@ def response2md(json_dict, text_type: text_type_):
             markdown_savepath = f"{download_dir}/{markdown_name}"   
         else:
             markdown_savepath = download_dir
+
         with open(f"{markdown_savepath}/{markdown_name}.md", 'w', encoding='utf-8') as md:
             md.write(markdown)
     except Exception as e:
-        print(f"[user downloading] Error processing {markdown_name}: {e}")
+        user_print(f"Error processing {markdown_name}: {e}")
     
-    print(f"[user downloading] Successfully downloaded {markdown_name}")
+    user_print(f"Successfully downloaded {markdown_name}")
 
 def response(flow: mitmproxy.http.HTTPFlow):
     no_cond = "page-info.zhihu.com" in flow.request.host
